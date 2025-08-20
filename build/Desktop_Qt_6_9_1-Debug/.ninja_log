@@ -1,0 +1,19 @@
+# ninja log v6
+3533	3826	1755725000873432421	foo	b4011de99c5cbfcb
+254	2653	1755724997595401205	CMakeFiles/foo.dir/Main.cpp.o	7a778020eb5a0794
+3	254	1755724997589489783	/home/lol/Documents/Coding/C++/SparseMatrices/build/Desktop_Qt_6_9_1-Debug/foo_autogen/mocs_compilation.cpp	8ef11155fc231233
+3	254	1755724997589489783	/home/lol/Documents/Coding/C++/SparseMatrices/build/Desktop_Qt_6_9_1-Debug/foo_autogen/timestamp	8ef11155fc231233
+3	254	1755724997589489783	foo_autogen/mocs_compilation.cpp	8ef11155fc231233
+254	3533	1755724997594489695	CMakeFiles/foo.dir/foo_autogen/mocs_compilation.cpp.o	7042db008952531
+3	254	1755724997589489783	foo_autogen/timestamp	8ef11155fc231233
+5	9	1755724997328932019	clean	b1ee4797a165d111
+2	5	1755724997325494401	CMakeFiles/clean.additional	7d54ee7770d40760
+4	9	1755725371630843609	CMakeFiles/clean.additional	7d54ee7770d40760
+9	12	1755725371636315040	clean	b1ee4797a165d111
+3	233	1755725371878334354	foo_autogen/timestamp	8ef11155fc231233
+3	233	1755725371878334354	foo_autogen/mocs_compilation.cpp	8ef11155fc231233
+3	233	1755725371878334354	/home/lol/Documents/Coding/C++/SparseMatrices/build/Desktop_Qt_6_9_1-Debug/foo_autogen/timestamp	8ef11155fc231233
+3	233	1755725371878334354	/home/lol/Documents/Coding/C++/SparseMatrices/build/Desktop_Qt_6_9_1-Debug/foo_autogen/mocs_compilation.cpp	8ef11155fc231233
+233	2434	1755725371882701352	CMakeFiles/foo.dir/Main.cpp.o	7a778020eb5a0794
+233	3227	1755725371881840293	CMakeFiles/foo.dir/foo_autogen/mocs_compilation.cpp.o	7042db008952531
+3227	3511	1755725374875800773	foo	b4011de99c5cbfcb

@@ -1,0 +1,14 @@
+[
+{
+  "directory": "/home/lol/Documents/Coding/C++/SparseMatrices/build/Desktop_Qt_6_9_1-Debug",
+  "command": "/bin/g++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/lol/Documents/Coding/C++/SparseMatrices/build/Desktop_Qt_6_9_1-Debug/foo_autogen/include -isystem /home/lol/Qt/6.9.1/gcc_64/include/QtCore -isystem /home/lol/Qt/6.9.1/gcc_64/include -isystem /home/lol/Qt/6.9.1/gcc_64/mkspecs/linux-g++ -isystem /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets -isystem /home/lol/Qt/6.9.1/gcc_64/include/QtGui -O2 -Wall -Wextra -Warith-conversion -pedantic -Wpedantic -g -ggdb -g -std=gnu++23 -fdiagnostics-color=always -fPIC -o CMakeFiles/foo.dir/foo_autogen/mocs_compilation.cpp.o -c /home/lol/Documents/Coding/C++/SparseMatrices/build/Desktop_Qt_6_9_1-Debug/foo_autogen/mocs_compilation.cpp",
+  "file": "/home/lol/Documents/Coding/C++/SparseMatrices/build/Desktop_Qt_6_9_1-Debug/foo_autogen/mocs_compilation.cpp",
+  "output": "CMakeFiles/foo.dir/foo_autogen/mocs_compilation.cpp.o"
+},
+{
+  "directory": "/home/lol/Documents/Coding/C++/SparseMatrices/build/Desktop_Qt_6_9_1-Debug",
+  "command": "/bin/g++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/lol/Documents/Coding/C++/SparseMatrices/build/Desktop_Qt_6_9_1-Debug/foo_autogen/include -isystem /home/lol/Qt/6.9.1/gcc_64/include/QtCore -isystem /home/lol/Qt/6.9.1/gcc_64/include -isystem /home/lol/Qt/6.9.1/gcc_64/mkspecs/linux-g++ -isystem /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets -isystem /home/lol/Qt/6.9.1/gcc_64/include/QtGui -O2 -Wall -Wextra -Warith-conversion -pedantic -Wpedantic -g -ggdb -g -std=gnu++23 -fdiagnostics-color=always -fPIC -o CMakeFiles/foo.dir/Main.cpp.o -c /home/lol/Documents/Coding/C++/SparseMatrices/Main.cpp",
+  "file": "/home/lol/Documents/Coding/C++/SparseMatrices/Main.cpp",
+  "output": "CMakeFiles/foo.dir/Main.cpp.o"
+}
+]

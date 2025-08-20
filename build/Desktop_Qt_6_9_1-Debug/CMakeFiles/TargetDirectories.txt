@@ -1,0 +1,5 @@
+/home/lol/Documents/Coding/C++/SparseMatrices/build/Desktop_Qt_6_9_1-Debug/CMakeFiles/foo.dir
+/home/lol/Documents/Coding/C++/SparseMatrices/build/Desktop_Qt_6_9_1-Debug/CMakeFiles/edit_cache.dir
+/home/lol/Documents/Coding/C++/SparseMatrices/build/Desktop_Qt_6_9_1-Debug/CMakeFiles/rebuild_cache.dir
+/home/lol/Documents/Coding/C++/SparseMatrices/build/Desktop_Qt_6_9_1-Debug/CMakeFiles/foo_autogen_timestamp_deps.dir
+/home/lol/Documents/Coding/C++/SparseMatrices/build/Desktop_Qt_6_9_1-Debug/CMakeFiles/foo_autogen.dir
