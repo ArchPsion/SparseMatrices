@@ -3,10 +3,12 @@
 
 // Qt Libraries
 #include <QGridLayout>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMainWindow>
 #include <QPushButton>
+#include <QGroupBox>
 #include <QRegularExpressionValidator>
 #include <QTextEdit>
 
@@ -25,8 +27,8 @@ class QSparseMatrixWindow : public QMainWindow
 		QWidget* const			mainWidget = new QWidget();
 		
 		QTextEdit* const		matrixEdit = new QTextEdit("", mainWidget);
-		QTextEdit* const		transposedOrthogonalEdit = new QTextEdit("", mainWidget);
-		QTextEdit* const		upperTriangularEdit = new QTextEdit("", mainWidget);
+		QTextEdit* const		unitaryEdit = new QTextEdit("", mainWidget);
+		QTextEdit* const		triangularEdit = new QTextEdit("", mainWidget);
 		QTextEdit* const		dataEdit = new QTextEdit("", mainWidget);
 		
 		QLineEdit* const		rowSetEdit = new QLineEdit("", mainWidget);
@@ -79,14 +81,42 @@ QSparseMatrixWindow::QSparseMatrixWindow(void) : QMainWindow()
 	const auto columnLabel = new QLabel("Column Indices", QSparseMatrixWindow::mainWidget);
 	const auto valueLabel = new QLabel("Matrix Values", QSparseMatrixWindow::mainWidget);
 	
+	const auto box1 = new QGroupBox("Sparse Matrix A");
+	const auto layout1 = new QHBoxLayout();
+	
+	layout1->addWidget(QSparseMatrixWindow::matrixEdit);
+	QSparseMatrixWindow::matrixEdit->setFrameStyle(QFrame::NoFrame);
+	box1->setLayout(layout1);
+	
+	const auto box2 = new QGroupBox("Unitary Matrix Q");
+	const auto layout2 = new QHBoxLayout();
+	
+	layout2->addWidget(QSparseMatrixWindow::unitaryEdit);
+	QSparseMatrixWindow::unitaryEdit->setFrameStyle(QFrame::NoFrame);
+	box2->setLayout(layout2);
+	
+	const auto box3 = new QGroupBox("Triangular Matrix R");
+	const auto layout3 = new QHBoxLayout();
+	
+	layout3->addWidget(QSparseMatrixWindow::triangularEdit);
+	QSparseMatrixWindow::triangularEdit->setFrameStyle(QFrame::NoFrame);
+	box3->setLayout(layout3);
+	
+	const auto box4 = new QGroupBox("Non-Zero Values");
+	const auto layout4 = new QHBoxLayout();
+	
+	layout4->addWidget(QSparseMatrixWindow::dataEdit);
+	QSparseMatrixWindow::dataEdit->setFrameStyle(QFrame::NoFrame);
+	box4->setLayout(layout4);
+	
 	const auto grid = new QGridLayout();
 	auto rowCount = 0;
 	
-	grid->addWidget(QSparseMatrixWindow::matrixEdit, rowCount, 0, 1, 3);
-	grid->addWidget(QSparseMatrixWindow::dataEdit, rowCount, 3, 3, 1);
+	grid->addWidget(box1, rowCount, 0, 1, 3);
+	grid->addWidget(box4, rowCount, 3, 3, 1);
 	
-	grid->addWidget(QSparseMatrixWindow::transposedOrthogonalEdit, ++rowCount, 0, 1, 3);
-	grid->addWidget(QSparseMatrixWindow::upperTriangularEdit, ++rowCount, 0, 1, 3);
+	grid->addWidget(box2, ++rowCount, 0, 1, 3);
+	grid->addWidget(box3, ++rowCount, 0, 1, 3);
 	
 	grid->addWidget(QSparseMatrixWindow::dimensionEdit, ++rowCount, 0, 1, 1);
 	grid->addWidget(QSparseMatrixWindow::rankEdit, rowCount, 1, 1, 1);
@@ -125,8 +155,8 @@ QSparseMatrixWindow::QSparseMatrixWindow(void) : QMainWindow()
 	const auto integerValidator = new QRegularExpressionValidator(QRegularExpression("[0-9]*"), this);
 	
 	QSparseMatrixWindow::matrixEdit->setReadOnly(true);
-	QSparseMatrixWindow::transposedOrthogonalEdit->setReadOnly(true);
-	QSparseMatrixWindow::upperTriangularEdit->setReadOnly(true);
+	QSparseMatrixWindow::unitaryEdit->setReadOnly(true);
+	QSparseMatrixWindow::triangularEdit->setReadOnly(true);
 	QSparseMatrixWindow::dataEdit->setReadOnly(true);
 	
 	QSparseMatrixWindow::valueSetEdit->setAlignment(Qt::AlignCenter);
@@ -163,10 +193,10 @@ void QSparseMatrixWindow::decompose(void)
 {
 	QSparseMatrixWindow::decomp = QSparseMatrixWindow::matrix.getDecomposition();
 	
-	QSparseMatrixWindow::FillEntryWithMatrix(decomp.orthogonal, QSparseMatrixWindow::transposedOrthogonalEdit, "unused orthonormal column(s)", QSparseMatrixWindow::matrix.getNumberOfRows(), true);
-	QSparseMatrixWindow::FillEntryWithMatrix(decomp.triangular, QSparseMatrixWindow::upperTriangularEdit, "row(s) of zeroes", QSparseMatrixWindow::matrix.getNumberOfRows(), false);
+	QSparseMatrixWindow::FillEntryWithMatrix(decomp.unitary, QSparseMatrixWindow::unitaryEdit, "unused orthonormal column(s)", QSparseMatrixWindow::matrix.getNumberOfRows(), true);
+	QSparseMatrixWindow::FillEntryWithMatrix(decomp.triangular, QSparseMatrixWindow::triangularEdit, "row(s) of zeroes", QSparseMatrixWindow::matrix.getNumberOfRows(), false);
 	
-	const auto rank = decomp.orthogonal.getNumberOfColumns();
+	const auto rank = decomp.unitary.getNumberOfColumns();
 	const auto rankString = "Rank " + QString::number(rank);
 	
 	QSparseMatrixWindow::rankEdit->setText(rankString);
@@ -308,8 +338,8 @@ void QSparseMatrixWindow::updateEntries(void) const
 	
 	QSparseMatrixWindow::dataEdit->setText(dataString);
 	QSparseMatrixWindow::matrixEdit->setText(matrixString);
-	QSparseMatrixWindow::transposedOrthogonalEdit->setText("");
-	QSparseMatrixWindow::upperTriangularEdit->setText("");
+	QSparseMatrixWindow::unitaryEdit->setText("");
+	QSparseMatrixWindow::triangularEdit->setText("");
 	
 	const auto& rowOffsets = QSparseMatrixWindow::matrix.getRowOffsets();
 	const auto& pairs = QSparseMatrixWindow::matrix.getPairs();

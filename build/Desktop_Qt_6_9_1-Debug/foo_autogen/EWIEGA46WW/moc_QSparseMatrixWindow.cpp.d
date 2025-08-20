@@ -165,6 +165,8 @@
   /home/lol/Qt/6.9.1/gcc_64/include/QtGui/qvalidator.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtGui/qwindowdefs.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/QGridLayout \
+  /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/QGroupBox \
+  /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/QHBoxLayout \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/QLabel \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/QLineEdit \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/QMainWindow \
@@ -175,6 +177,7 @@
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qboxlayout.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qframe.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qgridlayout.h \
+  /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qgroupbox.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qlabel.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qlayout.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qlayoutitem.h \

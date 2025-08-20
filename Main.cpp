@@ -6,7 +6,8 @@
 
 int main(int argc, char* argv[])
 {
-	const QString stylesheet = "QLineEdit#A   { font-family: monospace; background-color: rgb(204, 204, 255) }"
+	const QString stylesheet = "QGroupBox { border: 1px solid gray; border-radius: 9px; font-size: 12px; font-weight: bold; margin-top: 1.5ex; }"
+					"QLineEdit#A   { font-family: monospace; background-color: rgb(204, 204, 255) }"
 					"QTextEdit   { font-family: monospace }";
 	
 	auto app = QApplication(argc, argv);

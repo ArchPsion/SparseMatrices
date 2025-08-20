@@ -74,7 +74,7 @@ class HexSparseMatrix
 
 struct HexDecomposition // QR decomposition of matrix, where Q is unitary and R is upper triangular
 {
-	HexSparseMatrix orthogonal;		// Q
+	HexSparseMatrix unitary;		// Q
 	HexSparseMatrix triangular;		// R
 };
 
@@ -262,7 +262,7 @@ HexDecomposition HexSparseMatrix::getDecomposition(void) const
 			break;
 	}
 	
-	decomp.orthogonal = HexSparseMatrix(rowBase).transposed();
+	decomp.unitary = HexSparseMatrix(rowBase).transposed();
 	decomp.triangular = HexSparseMatrix(coeffs).transposed();
 	
 	return decomp;
