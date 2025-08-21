@@ -6,6 +6,10 @@
 
 // Qt Libraries
 #include <QtGlobal>
+#include <QtMath>
+
+// Custom Libraries
+#include "HexRandomGenerator.hpp"
 
 struct HexColumnValuePair
 {
@@ -60,7 +64,9 @@ class HexSparseMatrix
 		inline qint32								getRank(void) const;
 		inline const std::vector<qint32>&					getRowOffsets(void) const;
 		inline qreal								getSparsity(void) const;
+		inline bool								insertOne(HexRandomGenerator&);
 		inline void								setValue(qint32, qint32, qreal);
+		inline bool								shuffle(HexRandomGenerator&);
 		inline void								swapColumns(qint32, qint32);
 		inline void								swapRows(qint32, qint32);
 		inline void								transpose(void);
@@ -359,6 +365,68 @@ bool HexSparseMatrix::insertColumnValuePair(qint32 firstPossibleIndex, qint32 la
 	return false;
 }
 
+bool HexSparseMatrix::insertOne(HexRandomGenerator& generator)
+{
+	const auto numberOfElements = static_cast<qint32>(HexSparseMatrix::pairs.size());
+	
+	if (numberOfElements >= HexSparseMatrix::numberOfRows*HexSparseMatrix::numberOfColumns)
+		return false;
+	
+	auto row = generator.getNumberWithinRange(HexSparseMatrix::numberOfRows);
+	auto column = 0;
+	
+	while (HexSparseMatrix::rowOffsets[row + 1] - HexSparseMatrix::rowOffsets[row] == HexSparseMatrix::numberOfColumns)
+		row = generator.getNumberWithinRange(HexSparseMatrix::numberOfRows);
+	
+	const auto beg = HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row];
+	const auto end = HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row + 1];
+	
+	if (beg != end)
+	{
+		std::vector<qint32> candidates;
+		auto index = 0;
+		
+		for (auto it = beg; it != end; ++it)
+		{
+			while (index < it->column)
+			{
+				candidates.push_back(index);
+				++index;
+			}
+			
+			++index;
+		}
+		
+		while (index < HexSparseMatrix::numberOfColumns)
+		{
+			candidates.push_back(index);
+			++index;
+		}
+		
+		if (candidates.size() < 2u)
+			column = candidates.front();
+		else
+		{
+			const auto foo = generator.getNumberWithinRange(static_cast<qint32>(candidates.size()));
+			column = candidates[foo];
+		}
+	}
+	else
+		column = generator.getNumberWithinRange(HexSparseMatrix::numberOfColumns);
+	
+	auto it = beg;
+	
+	while (it != end and it->column < column)
+		++it;
+	
+	HexSparseMatrix::pairs.emplace(it, 1., column);
+	
+	for (auto r = row + 1; r <= HexSparseMatrix::numberOfRows; ++r)
+		++HexSparseMatrix::rowOffsets[r];
+	
+	return true;
+}
+
 /* Vectors with very short norms are considered null to avoid
  * numerical instability. I guess 0.001 is still too high though.
  */
@@ -458,6 +526,74 @@ void HexSparseMatrix::setValue(qint32 row, qint32 column, qreal value)
 		return HexSparseMatrix::addValue(row, column, value);
 	
 	HexSparseMatrix::removeValue(row, column);
+}
+
+bool HexSparseMatrix::shuffle(HexRandomGenerator& generator)
+{
+	const auto numberOfElements = HexSparseMatrix::pairs.size();
+	
+	if (numberOfElements < 1u)
+		return false;
+	
+	auto newRowOffsets = std::vector<qint32>(HexSparseMatrix::numberOfRows + 1, 0);
+	auto rowCounts = std::vector<qint32>(HexSparseMatrix::numberOfRows, 0);
+	
+	++rowCounts.back(); // Ensuring that the last row of this matrix is not empty, so that the matrix has indeed the same numberOfRows
+	
+	for (auto i = 1u; i < numberOfElements; ++i)
+	{
+		auto row = generator.getNumberWithinRange(HexSparseMatrix::numberOfRows);
+		
+		while (rowCounts[row] >= HexSparseMatrix::numberOfColumns)
+			row = generator.getNumberWithinRange(HexSparseMatrix::numberOfRows);
+		
+		++rowCounts[row];
+	}
+	
+	for (auto row = 1; row <= HexSparseMatrix::numberOfRows; ++row)
+		newRowOffsets[row] = newRowOffsets[row - 1] + rowCounts[row - 1];
+	
+	newRowOffsets.swap(HexSparseMatrix::rowOffsets);
+	generator.shuffle(HexSparseMatrix::pairs);
+	
+	auto rowReachingLastColumn = generator.getNumberWithinRange(HexSparseMatrix::numberOfRows);
+	
+	while (rowCounts[rowReachingLastColumn] < 1)
+		rowReachingLastColumn = generator.getNumberWithinRange(HexSparseMatrix::numberOfRows);
+	
+	auto stopIndex = HexSparseMatrix::rowOffsets.cbegin() + 1u;
+	
+	for (const auto& startIndex : HexSparseMatrix::rowOffsets)
+	{
+		const auto numberOfElementsInRow = (*stopIndex) - startIndex;
+		
+		if (numberOfElementsInRow >= 1)
+		{
+			auto newColumns = generator.getNumbersWithinRange(numberOfElementsInRow, HexSparseMatrix::numberOfColumns);
+			auto it = HexSparseMatrix::pairs.begin() + startIndex;
+			
+			if (newColumns.back() == HexSparseMatrix::numberOfColumns - 1)
+				rowReachingLastColumn = -1;
+			else if (rowReachingLastColumn == 0)
+				newColumns.back() = HexSparseMatrix::numberOfColumns - 1;
+				
+			// Ensuring that the last column of this matrix is not empty, so that the matrix has indeed the same numberOfColumns
+			
+			for (auto& column : newColumns)
+			{
+				it->column = column;
+				++it;
+			}
+		}
+		
+		--rowReachingLastColumn;
+		++stopIndex;
+		
+		if (HexSparseMatrix::rowOffsets.cend() == stopIndex)
+			break;
+	}
+	
+	return true;
 }
 
 void HexSparseMatrix::swapColumns(qint32 column1, qint32 column2)

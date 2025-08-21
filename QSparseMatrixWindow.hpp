@@ -7,12 +7,14 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QMainWindow>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QGroupBox>
 #include <QRegularExpressionValidator>
 #include <QTextEdit>
 
 // Custom Libraries
+#include "HexRandomGenerator.hpp"
 #include "HexSparseMatrix.hpp"
 
 class QSparseMatrixWindow : public QMainWindow
@@ -26,9 +28,16 @@ class QSparseMatrixWindow : public QMainWindow
 	
 		QWidget* const			mainWidget = new QWidget();
 		
+		QGroupBox* const		matrixBox = new QGroupBox("Sparse Matrix A", mainWidget);
 		QTextEdit* const		matrixEdit = new QTextEdit("", mainWidget);
+		
+		QGroupBox* const		unitaryBox = new QGroupBox("Unitary Matrix Q", mainWidget);
 		QTextEdit* const		unitaryEdit = new QTextEdit("", mainWidget);
+		
+		QGroupBox* const		triangularBox = new QGroupBox("Triangular Matrix R", mainWidget);
 		QTextEdit* const		triangularEdit = new QTextEdit("", mainWidget);
+		
+		QGroupBox* const		dataBox = new QGroupBox("Non-Zero Values", mainWidget);
 		QTextEdit* const		dataEdit = new QTextEdit("", mainWidget);
 		
 		QLineEdit* const		rowSetEdit = new QLineEdit("", mainWidget);
@@ -47,6 +56,7 @@ class QSparseMatrixWindow : public QMainWindow
 		QLineEdit* const		columnIndicesEdit = new QLineEdit("[ ]", mainWidget);
 		QLineEdit* const		valuesEdit = new QLineEdit("[ ]", mainWidget);
 		
+		HexRandomGenerator		generator;
 		HexSparseMatrix			matrix;
 		HexDecomposition		decomp;
 		
@@ -55,7 +65,9 @@ class QSparseMatrixWindow : public QMainWindow
 	private slots:
 	
 		inline void			decompose(void);
+		inline void			insert(void);
 		inline void			setValue(void);
+		inline void			shuffle(void);
 		inline void			swapColumns(void);
 		inline void			swapRows(void);
 		inline void			transpose(void);
@@ -74,6 +86,9 @@ QSparseMatrixWindow::QSparseMatrixWindow(void) : QMainWindow()
 	const auto setValueButton = new QPushButton("Set Value", QSparseMatrixWindow::mainWidget);
 	const auto swapRowsButton = new QPushButton("Swap Rows", QSparseMatrixWindow::mainWidget);
 	const auto swapColumnsButton = new QPushButton("Swap Columns", QSparseMatrixWindow::mainWidget);
+	
+	const auto insertButton = new QPushButton("Insert 1", QSparseMatrixWindow::mainWidget);
+	const auto shuffleButton = new QPushButton("Shuffle", QSparseMatrixWindow::mainWidget);
 	const auto transposeButton = new QPushButton("Transpose", QSparseMatrixWindow::mainWidget);
 	const auto decomposeButton = new QPushButton("Decompose", QSparseMatrixWindow::mainWidget);
 	
@@ -81,42 +96,38 @@ QSparseMatrixWindow::QSparseMatrixWindow(void) : QMainWindow()
 	const auto columnLabel = new QLabel("Column Indices", QSparseMatrixWindow::mainWidget);
 	const auto valueLabel = new QLabel("Matrix Values", QSparseMatrixWindow::mainWidget);
 	
-	const auto box1 = new QGroupBox("Sparse Matrix A");
 	const auto layout1 = new QHBoxLayout();
-	
 	layout1->addWidget(QSparseMatrixWindow::matrixEdit);
+	
 	QSparseMatrixWindow::matrixEdit->setFrameStyle(QFrame::NoFrame);
-	box1->setLayout(layout1);
+	QSparseMatrixWindow::matrixBox->setLayout(layout1);
 	
-	const auto box2 = new QGroupBox("Unitary Matrix Q");
 	const auto layout2 = new QHBoxLayout();
-	
 	layout2->addWidget(QSparseMatrixWindow::unitaryEdit);
+	
 	QSparseMatrixWindow::unitaryEdit->setFrameStyle(QFrame::NoFrame);
-	box2->setLayout(layout2);
+	QSparseMatrixWindow::unitaryBox->setLayout(layout2);
 	
-	const auto box3 = new QGroupBox("Triangular Matrix R");
 	const auto layout3 = new QHBoxLayout();
-	
 	layout3->addWidget(QSparseMatrixWindow::triangularEdit);
+	
 	QSparseMatrixWindow::triangularEdit->setFrameStyle(QFrame::NoFrame);
-	box3->setLayout(layout3);
+	QSparseMatrixWindow::triangularBox->setLayout(layout3);
 	
-	const auto box4 = new QGroupBox("Non-Zero Values");
 	const auto layout4 = new QHBoxLayout();
-	
 	layout4->addWidget(QSparseMatrixWindow::dataEdit);
+	
 	QSparseMatrixWindow::dataEdit->setFrameStyle(QFrame::NoFrame);
-	box4->setLayout(layout4);
+	QSparseMatrixWindow::dataBox->setLayout(layout4);
 	
 	const auto grid = new QGridLayout();
 	auto rowCount = 0;
 	
-	grid->addWidget(box1, rowCount, 0, 1, 3);
-	grid->addWidget(box4, rowCount, 3, 3, 1);
+	grid->addWidget(QSparseMatrixWindow::matrixBox, rowCount, 0, 1, 3);
+	grid->addWidget(QSparseMatrixWindow::dataBox, rowCount, 3, 3, 1);
 	
-	grid->addWidget(box2, ++rowCount, 0, 1, 3);
-	grid->addWidget(box3, ++rowCount, 0, 1, 3);
+	grid->addWidget(QSparseMatrixWindow::unitaryBox, ++rowCount, 0, 1, 3);
+	grid->addWidget(QSparseMatrixWindow::triangularBox, ++rowCount, 0, 1, 3);
 	
 	grid->addWidget(QSparseMatrixWindow::dimensionEdit, ++rowCount, 0, 1, 1);
 	grid->addWidget(QSparseMatrixWindow::rankEdit, rowCount, 1, 1, 1);
@@ -140,8 +151,10 @@ QSparseMatrixWindow::QSparseMatrixWindow(void) : QMainWindow()
 	grid->addWidget(swapRowsButton, rowCount, 2, 1, 1);
 	grid->addWidget(swapColumnsButton, rowCount, 3, 1, 1);
 	
-	grid->addWidget(transposeButton, ++rowCount, 0, 1, 2);
-	grid->addWidget(decomposeButton, rowCount, 2, 1, 2);
+	grid->addWidget(insertButton, ++rowCount, 0, 1, 1);
+	grid->addWidget(shuffleButton, rowCount, 1, 1, 1);
+	grid->addWidget(transposeButton, rowCount, 2, 1, 1);
+	grid->addWidget(decomposeButton, rowCount, 3, 1, 1);
 	
 	grid->setRowStretch(0, 100);
 	grid->setRowStretch(1, 100);
@@ -185,6 +198,9 @@ QSparseMatrixWindow::QSparseMatrixWindow(void) : QMainWindow()
 	QObject::connect(setValueButton, SIGNAL(clicked(void)), this, SLOT(setValue(void)));
 	QObject::connect(swapRowsButton, SIGNAL(clicked(void)), this, SLOT(swapRows(void)));
 	QObject::connect(swapColumnsButton, SIGNAL(clicked(void)), this, SLOT(swapColumns(void)));
+	
+	QObject::connect(insertButton, SIGNAL(clicked(void)), this, SLOT(insert(void)));
+	QObject::connect(shuffleButton, SIGNAL(clicked(void)), this, SLOT(shuffle(void)));
 	QObject::connect(transposeButton, SIGNAL(clicked(void)), this, SLOT(transpose(void)));
 	QObject::connect(decomposeButton, SIGNAL(clicked(void)), this, SLOT(decompose(void)));
 }
@@ -199,7 +215,15 @@ void QSparseMatrixWindow::decompose(void)
 	const auto rank = decomp.unitary.getNumberOfColumns();
 	const auto rankString = "Rank " + QString::number(rank);
 	
+	const auto unitaryDimension = QString::number(QSparseMatrixWindow::decomp.unitary.getNumberOfRows()) + " × " + QString::number(QSparseMatrixWindow::decomp.unitary.getNumberOfRows());
+	const auto triangularDimension = QString::number(QSparseMatrixWindow::matrix.getNumberOfRows()) + " × " + QString::number(QSparseMatrixWindow::matrix.getNumberOfColumns());
+	
+	const auto unitaryTitle = "Unitary Matrix Q (" + unitaryDimension + ')';
+	const auto triangularTitle = "Triangular Matrix R (" + triangularDimension + ')';
+	
 	QSparseMatrixWindow::rankEdit->setText(rankString);
+	QSparseMatrixWindow::unitaryBox->setTitle(unitaryTitle);
+	QSparseMatrixWindow::triangularBox->setTitle(triangularTitle);
 }
 
 void QSparseMatrixWindow::FillEntryWithMatrix(const HexSparseMatrix& matrix, QTextEdit* edit, QString&& str, qint32 biggerNumber, bool column)
@@ -208,24 +232,40 @@ void QSparseMatrixWindow::FillEntryWithMatrix(const HexSparseMatrix& matrix, QTe
 	const auto numberOfRows = matrix.getNumberOfRows();
 	const auto denseMatrix = matrix.getDenseMatrix();
 	
+	const auto smallerNumber = (column ? numberOfColumns : numberOfRows);
+	const auto diff = biggerNumber - smallerNumber;
+	
 	auto matrixString = QString();
 	auto index = 0;
 	
 	for (auto cit = denseMatrix.cbegin(); denseMatrix.cend() != cit; ++cit)
 	{
 		matrixString += QSparseMatrixWindow::NumberString(*cit);
-		matrixString += ((index + 1) % numberOfColumns != 0 ? ' ' : '\n');
+		matrixString += ((index + 1) % numberOfColumns != 0 ? " " : "<br>");
+		
+		if (index + 1 == numberOfColumns and diff != 0 and column)
+		{
+			matrixString.chop(4u);
+			matrixString += " ...and " + QString::number(diff) + " more " + str + "<br>";
+		}
 		
 		++index;
 	}
 	
-	const auto smallerNumber = (column ? numberOfColumns : numberOfRows);
-	const auto diff = biggerNumber - smallerNumber;
+	if (diff != 0 and not column)
+		matrixString += "\n ...and " + QString::number(diff) + " more " + str;
 	
-	if (diff != 0)
-		matrixString += "and " + QString::number(diff) + " more " + str;
+	edit->setHtml(matrixString);
+}
+
+void QSparseMatrixWindow::insert(void)
+{
+	const auto success = QSparseMatrixWindow::matrix.insertOne(QSparseMatrixWindow::generator);
 	
-	edit->setText(matrixString);
+	if (success)
+		QSparseMatrixWindow::updateEntries();
+	else
+		QMessageBox::critical(this, "Nope", "There is no available field.");
 }
 
 QString QSparseMatrixWindow::NumberString(qreal val)
@@ -234,24 +274,27 @@ QString QSparseMatrixWindow::NumberString(qreal val)
 	const auto pos = str.indexOf('.');
 	
 	if (pos > 3)
-		return str.sliced(0, pos);
+		return "<font color=#FF0000>" + str.sliced(0, pos) + "</font>";
 	
 	while (str.size() > 4 or (str.size() > 0 and (str.back() == '.' or str.back() == '0')))
 		str.chop(1u);
 	
-	switch (str.size())
+	if (str.isEmpty())
+		return "&nbsp;0&nbsp;&nbsp;";
+	
+	const auto oldSize = str.size();
+	str = "<font color=#FF0000>" + str + "</font>";
+	
+	switch (oldSize)
 	{
-		case 0u:
-			return " 0  ";
-		
 		case 1u:
-			return ' ' + str + "  ";
+			return "&nbsp;" + str + "&nbsp;&nbsp;";
 		
 		case 2u:
-			return ' ' + str + ' ';
+			return "&nbsp;" + str + "&nbsp;";
 		
 		case 3u:
-			return str + ' ';
+			return str + "&nbsp;";
 		
 		default:
 			break;
@@ -275,6 +318,16 @@ void QSparseMatrixWindow::setValue(void)
 	QSparseMatrixWindow::rowSetEdit->clear();
 	QSparseMatrixWindow::columnSetEdit->clear();
 	QSparseMatrixWindow::valueSetEdit->clear();
+}
+
+void QSparseMatrixWindow::shuffle(void)
+{
+	const auto success = QSparseMatrixWindow::matrix.shuffle(QSparseMatrixWindow::generator);
+	
+	if (success)
+		QSparseMatrixWindow::updateEntries();
+	else
+		QMessageBox::critical(this, "Nope", "There is nothing to shuffle.");
 }
 
 void QSparseMatrixWindow::swapColumns(void)
@@ -326,7 +379,7 @@ void QSparseMatrixWindow::updateEntries(void) const
 	for (auto cit = denseMatrix.cbegin(); denseMatrix.cend() != cit; ++cit)
 	{
 		matrixString += QSparseMatrixWindow::NumberString(*cit);
-		matrixString += ((index + 1) % numberOfColumns != 0 ? ' ' : '\n');
+		matrixString += ((index + 1) % numberOfColumns != 0 ? " " : "<br>");
 		
 		if (*cit != 0.)
 			dataString += "a(" + QString::number(index/numberOfColumns) + ", " + QString::number(index % numberOfColumns) + ") = " + QString::number(*cit) + '\n';
@@ -337,7 +390,8 @@ void QSparseMatrixWindow::updateEntries(void) const
 	dataString.chop(1u);
 	
 	QSparseMatrixWindow::dataEdit->setText(dataString);
-	QSparseMatrixWindow::matrixEdit->setText(matrixString);
+	QSparseMatrixWindow::matrixEdit->setHtml(matrixString);
+	
 	QSparseMatrixWindow::unitaryEdit->setText("");
 	QSparseMatrixWindow::triangularEdit->setText("");
 	
@@ -370,6 +424,23 @@ void QSparseMatrixWindow::updateEntries(void) const
 	QSparseMatrixWindow::dimensionEdit->setText(dimensionString);
 	QSparseMatrixWindow::densityEdit->setText(densityString);
 	QSparseMatrixWindow::sparsityEdit->setText(sparsityString);
+	
+	if (pairs.empty())
+	{
+		QSparseMatrixWindow::matrixBox->setTitle("Sparse Matrix A");
+		QSparseMatrixWindow::dataBox->setTitle("Non-Zero Values");
+	}
+	else
+	{
+		const auto matrixTitle = "Sparse Matrix A (" + dimensionString + ')';
+		const auto dataTitle = "Non-Zero Values (" + QString::number(pairs.size()) + ')';
+		
+		QSparseMatrixWindow::matrixBox->setTitle(matrixTitle);
+		QSparseMatrixWindow::dataBox->setTitle(dataTitle);
+	}
+	
+	QSparseMatrixWindow::unitaryBox->setTitle("Unitary Matrix Q");
+	QSparseMatrixWindow::triangularBox->setTitle("Triangular Matrix R");
 }
 
 #endif

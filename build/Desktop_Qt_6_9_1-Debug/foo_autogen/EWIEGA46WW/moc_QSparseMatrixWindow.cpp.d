@@ -1,7 +1,9 @@
 /home/lol/Documents/Coding/C++/SparseMatrices/build/Desktop_Qt_6_9_1-Debug/foo_autogen/EWIEGA46WW/moc_QSparseMatrixWindow.cpp: /home/lol/Documents/Coding/C++/SparseMatrices/QSparseMatrixWindow.hpp \
   /home/lol/Documents/Coding/C++/SparseMatrices/build/Desktop_Qt_6_9_1-Debug/foo_autogen/moc_predefs.h \
+  /home/lol/Documents/Coding/C++/SparseMatrices/HexRandomGenerator.hpp \
   /home/lol/Documents/Coding/C++/SparseMatrices/HexSparseMatrix.hpp \
   /home/lol/Qt/6.9.1/gcc_64/include/QtCore/QtGlobal \
+  /home/lol/Qt/6.9.1/gcc_64/include/QtCore/QtMath \
   /home/lol/Qt/6.9.1/gcc_64/include/QtCore/q17memory.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtCore/q20functional.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtCore/q20iterator.h \
@@ -170,11 +172,14 @@
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/QLabel \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/QLineEdit \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/QMainWindow \
+  /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/QMessageBox \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/QPushButton \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/QTextEdit \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qabstractbutton.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qabstractscrollarea.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qboxlayout.h \
+  /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qdialog.h \
+  /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qdialogbuttonbox.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qframe.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qgridlayout.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qgroupbox.h \
@@ -183,6 +188,7 @@
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qlayoutitem.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qlineedit.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qmainwindow.h \
+  /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qmessagebox.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qpushbutton.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qsizepolicy.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtWidgets/qtabwidget.h \
@@ -261,6 +267,8 @@
   /usr/include/c++/13/bits/predefined_ops.h \
   /usr/include/c++/13/bits/ptr_traits.h \
   /usr/include/c++/13/bits/quoted_string.h \
+  /usr/include/c++/13/bits/random.h \
+  /usr/include/c++/13/bits/random.tcc \
   /usr/include/c++/13/bits/range_access.h \
   /usr/include/c++/13/bits/ranges_algo.h \
   /usr/include/c++/13/bits/ranges_algobase.h \
@@ -363,6 +371,7 @@
   /usr/include/c++/13/pstl/glue_algorithm_defs.h \
   /usr/include/c++/13/pstl/glue_memory_defs.h \
   /usr/include/c++/13/pstl/glue_numeric_defs.h \
+  /usr/include/c++/13/random \
   /usr/include/c++/13/ratio \
   /usr/include/c++/13/set \
   /usr/include/c++/13/span \
@@ -502,6 +511,7 @@
   /usr/include/x86_64-linux-gnu/c++/13/bits/gthr-default.h \
   /usr/include/x86_64-linux-gnu/c++/13/bits/gthr.h \
   /usr/include/x86_64-linux-gnu/c++/13/bits/messages_members.h \
+  /usr/include/x86_64-linux-gnu/c++/13/bits/opt_random.h \
   /usr/include/x86_64-linux-gnu/c++/13/bits/os_defines.h \
   /usr/include/x86_64-linux-gnu/c++/13/bits/time_members.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \

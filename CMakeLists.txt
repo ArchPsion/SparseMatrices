@@ -14,6 +14,7 @@ qt_standard_project_setup()
 
 qt_add_executable(	foo
 			
+			HexRandomGenerator.hpp
 			HexSparseMatrix.hpp
 			QSparseMatrixWindow.hpp
 			
