@@ -488,19 +488,15 @@ void HexSparseMatrix::removeValue(qint32 row, qint32 column)
 	for (auto r = row + 1; r <= HexSparseMatrix::numberOfRows; ++r)
 		--HexSparseMatrix::rowOffsets[r];
 }
-#include <iostream>
+
 template<typename Type1, typename Type2>
 void HexSparseMatrix::Rewrite(Type1& it, Type2 beg, Type2 end)
 {
-	std::cout << 'a' << std::endl;
-	auto index = 0;
 	for (auto itt = beg; itt != end; ++itt)
 	{
 		*it = *itt;
 		++it;
-		std::cout << index++ << std::endl;
 	}
-	std::cout << 'b' << std::endl;
 }
 
 template<typename Type1, typename Type2>
