@@ -134,6 +134,7 @@
   /home/lol/Qt/6.9.1/gcc_64/include/QtCore/qxptype_traits.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtCore/qyieldcpu.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtGui/QRegularExpressionValidator \
+  /home/lol/Qt/6.9.1/gcc_64/include/QtGui/QShortcut \
   /home/lol/Qt/6.9.1/gcc_64/include/QtGui/qaction.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtGui/qbitmap.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtGui/qbrush.h \
@@ -156,6 +157,7 @@
   /home/lol/Qt/6.9.1/gcc_64/include/QtGui/qregion.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtGui/qrgb.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtGui/qrgba64.h \
+  /home/lol/Qt/6.9.1/gcc_64/include/QtGui/qshortcut.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtGui/qtextcursor.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtGui/qtextdocument.h \
   /home/lol/Qt/6.9.1/gcc_64/include/QtGui/qtextformat.h \

@@ -17,6 +17,7 @@ class HexRandomGenerator
 	public:
 	
 		inline qint32					getNumberWithinRange(qint32);
+		inline quint32					getNumberWithinRange(quint32);
 		inline std::vector<qint32>			getNumbersWithinRange(qint32, qint32);
 		template<typename Type> inline void		shuffle(std::vector<Type>&);
 };
@@ -30,9 +31,17 @@ qint32 HexRandomGenerator::getNumberWithinRange(qint32 max)
 	return static_cast<qint32>(foo);
 }
 
+quint32 HexRandomGenerator::getNumberWithinRange(quint32 max)
+{
+	if (max < 2u)
+		return 0u;
+	
+	return (HexRandomGenerator::rGen() % max);
+}
+
 std::vector<qint32> HexRandomGenerator::getNumbersWithinRange(qint32 quantity, qint32 max)
 {	
-	if (max < 2 or quantity >= max + 1)
+	if (quantity < 1 or max < 2 or quantity >= max + 1)
 		return { };
 	
 	if (quantity == max)
@@ -46,7 +55,7 @@ std::vector<qint32> HexRandomGenerator::getNumbersWithinRange(qint32 quantity, q
 	auto numbers = std::vector<qint32>();
 	numbers.reserve(quantity*6/5);
 	
-	if (quantity > max/2)
+	if (quantity > max/2) // In this case, you might as well generate the numbers that you WON'T get.
 	{
 		const auto antiNumbers = HexRandomGenerator::getNumbersWithinRange(max - quantity, max);
 		auto index = 0;
@@ -58,6 +67,8 @@ std::vector<qint32> HexRandomGenerator::getNumbersWithinRange(qint32 quantity, q
 				numbers.push_back(index);
 				++index;
 			}
+			
+			++index;
 		}
 		
 		while (index < max)
@@ -69,15 +80,15 @@ std::vector<qint32> HexRandomGenerator::getNumbersWithinRange(qint32 quantity, q
 		return numbers;
 	}
 	
-	auto numbersToProduce = quantity*11/10;
+	auto numbersToProduce = quantity*11/10; // It's unlikely that the n generated numbers will be unique, so we produce a bit more.
 	auto uniqueNumbers = 0;
 	
 	while (numbersToProduce != 0)
 	{
 		for (auto i = 0; i < numbersToProduce; ++i)
 		{
-			const auto foo = HexRandomGenerator::rGen() % static_cast<quint32>(max);
-			numbers.emplace_back(static_cast<qint32>(foo));
+			const auto foo = HexRandomGenerator::getNumberWithinRange(max);
+			numbers.emplace_back(foo);
 		}
 		
 		std::sort(numbers.begin(), numbers.end());
@@ -85,10 +96,13 @@ std::vector<qint32> HexRandomGenerator::getNumbersWithinRange(qint32 quantity, q
 		auto duplicates = 0;
 		auto last = -1;
 		
-		for (const auto& val : numbers)
+		for (auto& val : numbers)
 		{
 			if (val == last)
+			{
 				++duplicates;
+				val = -1;
+			}
 			else
 				last = val;
 		}
@@ -98,20 +112,12 @@ std::vector<qint32> HexRandomGenerator::getNumbersWithinRange(qint32 quantity, q
 		
 		while (numbersToProduce < 0)
 		{
-			auto index = HexRandomGenerator::rGen() % numbers.size();
-			auto current = numbers[index];
+			auto index = HexRandomGenerator::rGen() % numbers.size(); // We remove this one, or the first non-duplicate element afterward.
 			
-			while (numbers[index] == current or numbers[index] == -1)
+			while (numbers[index] < 0)
 				index = (index + 1u) % numbers.size();
 			
-			auto disappearingValue = numbers[index];
-			
-			while (numbers[index] == disappearingValue)
-			{
-				numbers[index] = -1;
-				index = (index + 1u) % numbers.size();
-			}
-			
+			numbers[index] = -1;
 			++numbersToProduce;
 		}
 		

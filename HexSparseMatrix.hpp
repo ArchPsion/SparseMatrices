@@ -44,6 +44,7 @@ class HexSparseMatrix
 		qint32									numberOfColumns = 0;
 		
 		inline void								addValue(qint32, qint32, qreal);
+		inline qint32								indexOfFreeField(qint32, qint32) const;
 		inline bool								insertColumnValuePair(qint32, qint32, qint32, qreal);
 		inline void								removeValue(qint32, qint32);
 		inline void								updateNumberOfColumns(void);
@@ -52,8 +53,9 @@ class HexSparseMatrix
 	public:
 	
 		inline									HexSparseMatrix(void);
-		inline									HexSparseMatrix(const std::vector<std::vector<HexColumnValuePair>>&);
+		inline									HexSparseMatrix(const std::vector<std::vector<HexColumnValuePair>>&, qint32);
 	
+		inline void								downsize(void);
 		inline QString								getData(void) const;
 		inline HexDecomposition							getDecomposition(void) const;
 		inline std::vector<qreal>						getDenseMatrix(void) const;
@@ -88,26 +90,21 @@ HexSparseMatrix::HexSparseMatrix(void)
 {
 }
 
-HexSparseMatrix::HexSparseMatrix(const std::vector<std::vector<HexColumnValuePair>>& rows)
+HexSparseMatrix::HexSparseMatrix(const std::vector<std::vector<HexColumnValuePair>>& rows, qint32 noc)
 {
 	HexSparseMatrix::numberOfRows = static_cast<qint32>(rows.size());
+	HexSparseMatrix::numberOfColumns = noc;
+	
 	HexSparseMatrix::rowOffsets.push_back(0);
 	
 	for (const auto& row : rows)
 	{
 		if (not row.empty())
-		{
 			HexSparseMatrix::pairs.insert(HexSparseMatrix::pairs.end(), row.cbegin(), row.cend());
-			
-			if (HexSparseMatrix::numberOfColumns <= row.back().column)
-				HexSparseMatrix::numberOfColumns = row.back().column + 1;
-		}
 		
 		const auto nextIndex = HexSparseMatrix::rowOffsets.back() + static_cast<qint32>(row.size());
 		HexSparseMatrix::rowOffsets.push_back(nextIndex);
 	}
-	
-	HexSparseMatrix::updateNumberOfRows();
 }
 
 void HexSparseMatrix::addValue(qint32 row, qint32 column, qreal value)
@@ -205,6 +202,20 @@ void HexSparseMatrix::Change(std::vector<HexColumnValuePair>& vect, Type beg2, T
 	vect.swap(newVect);
 }
 
+void HexSparseMatrix::downsize(void)
+{
+	if (HexSparseMatrix::pairs.empty())
+	{
+		HexSparseMatrix::numberOfRows = 0;
+		HexSparseMatrix::numberOfColumns = 0;
+	}
+	else
+	{
+		HexSparseMatrix::updateNumberOfRows();
+		HexSparseMatrix::updateNumberOfColumns();
+	}
+}
+
 /* The hard copy at the end of this function can't really be avoided
  * as you can't populate Q with a new vector until you know for sure
  * that this vector is independent from the previous ones. I chose to
@@ -225,13 +236,13 @@ HexDecomposition HexSparseMatrix::getDecomposition(void) const
 	std::vector<std::vector<HexColumnValuePair>> rowBase;
 	std::vector<std::vector<HexColumnValuePair>> coeffs;
 	
-	for (auto startIndex = transposed.rowOffsets.cbegin(); startIndex != transposed.rowOffsets.cend(); ++startIndex)
+	for (const auto& startIndex : transposed.rowOffsets)
 	{
 		auto& rowCoeffs = coeffs.emplace_back();
 		
-		if (*startIndex != *stopIndex) // Row is not full of zeroes, it might be a new independent vector
+		if (startIndex != *stopIndex) // Row is not full of zeroes, it might be a new independent vector
 		{
-			const auto start = transposed.pairs.cbegin() + (*startIndex);
+			const auto start = transposed.pairs.cbegin() + startIndex;
 			const auto stop = transposed.pairs.cbegin() + (*stopIndex);
 			
 			auto newCandidateForBase = std::vector<HexColumnValuePair>(start, stop);
@@ -268,8 +279,8 @@ HexDecomposition HexSparseMatrix::getDecomposition(void) const
 			break;
 	}
 	
-	decomp.unitary = HexSparseMatrix(rowBase).transposed();
-	decomp.triangular = HexSparseMatrix(coeffs).transposed();
+	decomp.unitary = HexSparseMatrix(rowBase, HexSparseMatrix::numberOfRows).transposed();
+	decomp.triangular = HexSparseMatrix(coeffs, HexSparseMatrix::numberOfRows).transposed();
 	
 	return decomp;
 }
@@ -365,61 +376,61 @@ bool HexSparseMatrix::insertColumnValuePair(qint32 firstPossibleIndex, qint32 la
 	return false;
 }
 
+qint32 HexSparseMatrix::indexOfFreeField(qint32 row, qint32 column) const
+{
+	const auto startIndex = HexSparseMatrix::rowOffsets[row];
+	const auto stopIndex = HexSparseMatrix::rowOffsets[row + 1];
+	
+	if (stopIndex - startIndex == HexSparseMatrix::numberOfColumns)
+		return -1;
+	
+	if (startIndex == stopIndex)
+		return startIndex;
+	
+	const auto end = HexSparseMatrix::pairs.cbegin() + stopIndex;
+	auto index = startIndex;
+	
+	for (auto it = HexSparseMatrix::pairs.cbegin() + startIndex; it != end; ++it)
+	{
+		if (it->column >= column)
+			return (it->column == column ? -1 : index);
+		
+		++index;
+	}
+	
+	return index;
+}
+
 bool HexSparseMatrix::insertOne(HexRandomGenerator& generator)
 {
+	const auto numberOfFields = HexSparseMatrix::numberOfRows*HexSparseMatrix::numberOfColumns;
 	const auto numberOfElements = static_cast<qint32>(HexSparseMatrix::pairs.size());
 	
-	if (numberOfElements >= HexSparseMatrix::numberOfRows*HexSparseMatrix::numberOfColumns)
+	if (numberOfElements >= numberOfFields)
 		return false;
 	
-	auto row = generator.getNumberWithinRange(HexSparseMatrix::numberOfRows);
-	auto column = 0;
+	auto field = generator.getNumberWithinRange(numberOfFields);
+	auto column = field % HexSparseMatrix::numberOfColumns;
+	auto row = field/HexSparseMatrix::numberOfColumns;
 	
-	while (HexSparseMatrix::rowOffsets[row + 1] - HexSparseMatrix::rowOffsets[row] == HexSparseMatrix::numberOfColumns)
-		row = generator.getNumberWithinRange(HexSparseMatrix::numberOfRows);
-	
-	const auto beg = HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row];
-	const auto end = HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row + 1];
-	
-	if (beg != end)
+	if (numberOfElements < 1)
+		HexSparseMatrix::pairs.emplace_back(1., column);
+	else // Very unoptimised for large, dense matrices, but then this project is all about sparse matrices...
 	{
-		std::vector<qint32> candidates;
-		auto index = 0;
+		auto index = HexSparseMatrix::indexOfFreeField(row, column);
 		
-		for (auto it = beg; it != end; ++it)
+		while (index < 0)
 		{
-			while (index < it->column)
-			{
-				candidates.push_back(index);
-				++index;
-			}
+			field = generator.getNumberWithinRange(numberOfFields);
+			column = field % HexSparseMatrix::numberOfColumns;
+			row = field/HexSparseMatrix::numberOfColumns;
 			
-			++index;
+			index = HexSparseMatrix::indexOfFreeField(row, column);
 		}
 		
-		while (index < HexSparseMatrix::numberOfColumns)
-		{
-			candidates.push_back(index);
-			++index;
-		}
-		
-		if (candidates.size() < 2u)
-			column = candidates.front();
-		else
-		{
-			const auto foo = generator.getNumberWithinRange(static_cast<qint32>(candidates.size()));
-			column = candidates[foo];
-		}
+		const auto it = HexSparseMatrix::pairs.begin() + index;
+		HexSparseMatrix::pairs.emplace(it, 1., column);
 	}
-	else
-		column = generator.getNumberWithinRange(HexSparseMatrix::numberOfColumns);
-	
-	auto it = beg;
-	
-	while (it != end and it->column < column)
-		++it;
-	
-	HexSparseMatrix::pairs.emplace(it, 1., column);
 	
 	for (auto r = row + 1; r <= HexSparseMatrix::numberOfRows; ++r)
 		++HexSparseMatrix::rowOffsets[r];
@@ -473,24 +484,8 @@ void HexSparseMatrix::removeValue(qint32 row, qint32 column)
 		break;
 	}
 	
-	if (HexSparseMatrix::pairs.empty())
-	{
-		HexSparseMatrix::rowOffsets.clear();
-		
-		HexSparseMatrix::numberOfRows = 0;
-		HexSparseMatrix::numberOfColumns = 0;
-		return;
-	}
-	
-	// Now updating HexSparseMatrix::numberOfRows and HexSparseMatrix::numberOfColumns
-	
-	for (auto it = HexSparseMatrix::rowOffsets.begin() + row + 1; it != HexSparseMatrix::rowOffsets.end(); ++it)
-		--(*it);
-	
-	HexSparseMatrix::updateNumberOfRows();
-	
-	if (column + 1 >= HexSparseMatrix::numberOfColumns)
-		HexSparseMatrix::updateNumberOfColumns();
+	for (auto r = row + 1; r <= HexSparseMatrix::numberOfRows; ++r)
+		--HexSparseMatrix::rowOffsets[r];
 }
 
 template<typename Type1, typename Type2>
@@ -538,9 +533,7 @@ bool HexSparseMatrix::shuffle(HexRandomGenerator& generator)
 	auto newRowOffsets = std::vector<qint32>(HexSparseMatrix::numberOfRows + 1, 0);
 	auto rowCounts = std::vector<qint32>(HexSparseMatrix::numberOfRows, 0);
 	
-	++rowCounts.back(); // Ensuring that the last row of this matrix is not empty, so that the matrix has indeed the same numberOfRows
-	
-	for (auto i = 1u; i < numberOfElements; ++i)
+	for (auto i = 0u; i < numberOfElements; ++i)
 	{
 		auto row = generator.getNumberWithinRange(HexSparseMatrix::numberOfRows);
 		
@@ -553,13 +546,8 @@ bool HexSparseMatrix::shuffle(HexRandomGenerator& generator)
 	for (auto row = 1; row <= HexSparseMatrix::numberOfRows; ++row)
 		newRowOffsets[row] = newRowOffsets[row - 1] + rowCounts[row - 1];
 	
-	newRowOffsets.swap(HexSparseMatrix::rowOffsets);
+	HexSparseMatrix::rowOffsets.swap(newRowOffsets);
 	generator.shuffle(HexSparseMatrix::pairs);
-	
-	auto rowReachingLastColumn = generator.getNumberWithinRange(HexSparseMatrix::numberOfRows);
-	
-	while (rowCounts[rowReachingLastColumn] < 1)
-		rowReachingLastColumn = generator.getNumberWithinRange(HexSparseMatrix::numberOfRows);
 	
 	auto stopIndex = HexSparseMatrix::rowOffsets.cbegin() + 1u;
 	
@@ -569,24 +557,16 @@ bool HexSparseMatrix::shuffle(HexRandomGenerator& generator)
 		
 		if (numberOfElementsInRow >= 1)
 		{
-			auto newColumns = generator.getNumbersWithinRange(numberOfElementsInRow, HexSparseMatrix::numberOfColumns);
+			const auto newColumns = generator.getNumbersWithinRange(numberOfElementsInRow, HexSparseMatrix::numberOfColumns);
 			auto it = HexSparseMatrix::pairs.begin() + startIndex;
 			
-			if (newColumns.back() == HexSparseMatrix::numberOfColumns - 1)
-				rowReachingLastColumn = -1;
-			else if (rowReachingLastColumn == 0)
-				newColumns.back() = HexSparseMatrix::numberOfColumns - 1;
-				
-			// Ensuring that the last column of this matrix is not empty, so that the matrix has indeed the same numberOfColumns
-			
-			for (auto& column : newColumns)
+			for (const auto& column : newColumns)
 			{
 				it->column = column;
 				++it;
 			}
 		}
 		
-		--rowReachingLastColumn;
 		++stopIndex;
 		
 		if (HexSparseMatrix::rowOffsets.cend() == stopIndex)
@@ -676,8 +656,6 @@ void HexSparseMatrix::swapColumns(qint32 column1, qint32 column2)
 		++startIndex;
 		++stopIndex;
 	}
-	
-	HexSparseMatrix::updateNumberOfColumns();
 }
 
 void HexSparseMatrix::swapRows(qint32 row1, qint32 row2)
@@ -720,13 +698,10 @@ void HexSparseMatrix::swapRows(qint32 row1, qint32 row2)
 	
 	const auto differenceOfElements = numberOfElementsInRow2 - numberOfElementsInRow1;
 	
-	for (auto row = row1 + 1; row <= row2; ++row)
+	for (auto row = row1 + 1; row <= row2; ++row) // There is no difference beyond row2 as the sum of past elements is unchanged.
 		HexSparseMatrix::rowOffsets[row] += differenceOfElements;
 	
 	HexSparseMatrix::pairs.swap(newPairs);
-	
-	if (row2 + 1 == HexSparseMatrix::numberOfRows and beg1 == end1)
-		HexSparseMatrix::updateNumberOfRows();
 }
 
 void HexSparseMatrix::transpose(void)
@@ -741,16 +716,16 @@ void HexSparseMatrix::transpose(void)
 
 HexSparseMatrix HexSparseMatrix::transposed(void) const
 {
-	auto columnCounts = std::vector<qint32>(HexSparseMatrix::numberOfColumns + 1, 0);
+	auto rowCounts = std::vector<qint32>(HexSparseMatrix::numberOfColumns, 0);
 	
 	for (const auto& pr : HexSparseMatrix::pairs)
-		++columnCounts[pr.column];
+		++rowCounts[pr.column];
 	
 	auto transposed = HexSparseMatrix();
 	transposed.rowOffsets = std::vector<qint32>(HexSparseMatrix::numberOfColumns + 1, 0);
 	
-	for (auto row = 1; row < HexSparseMatrix::numberOfColumns + 1; ++row)
-		transposed.rowOffsets[row] = transposed.rowOffsets[row - 1] + columnCounts[row - 1];
+	for (auto row = 1; row <= HexSparseMatrix::numberOfColumns; ++row)
+		transposed.rowOffsets[row] = transposed.rowOffsets[row - 1] + rowCounts[row - 1];
 	
 	transposed.pairs = std::vector<HexColumnValuePair>(HexSparseMatrix::pairs.size());
 	auto rowIndexes = transposed.rowOffsets;
@@ -758,9 +733,9 @@ HexSparseMatrix HexSparseMatrix::transposed(void) const
 	auto stopIndex = HexSparseMatrix::rowOffsets.cbegin() + 1u;
 	auto row = 0;
 	
-	for (auto startIndex = HexSparseMatrix::rowOffsets.cbegin(); startIndex != HexSparseMatrix::rowOffsets.cend(); ++startIndex)
+	for (const auto& startIndex : HexSparseMatrix::rowOffsets)
 	{
-		for (auto oldIndex = *startIndex; oldIndex < *stopIndex; ++oldIndex)
+		for (auto oldIndex = startIndex; oldIndex < *stopIndex; ++oldIndex)
 		{
 			const auto& pr = HexSparseMatrix::pairs[oldIndex];
 			auto& newIndex = rowIndexes[pr.column];

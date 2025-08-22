@@ -34,44 +34,7 @@ int main(int argc, char* argv[])
 	app.setPalette(palette);
 	
 	auto window = QSparseMatrixWindow();
-	
-	/*
-	auto matrix = HexSparseMatrix();
-	
-	matrix.setValue(1, 1, 5.);
-	matrix.setValue(1, 1, 3.);
-	matrix.show();
-	matrix.setValue(3, 4, -2.);
-	matrix.show();
-	matrix.setValue(2, 4, -23.);
-	matrix.show();
-	matrix.setValue(2, 1, 7.);
-	matrix.show();
-	matrix.setValue(0, 8, 123.);
-	matrix.show();
-	matrix.setValue(3, 6, -45.32);
-	matrix.show();
-	matrix.swapColumns(1, 4);
-	matrix.show();
-	
-	matrix.setValue(2, 8, 1.);
-	matrix.show();
-	matrix.setValue(3, 4, 0.);
-	matrix.show();
-	matrix.setValue(3, 6, 0.);
-	matrix.show();
-	matrix.setValue(0, 8, 0.);
-	matrix.show();
-	matrix.setValue(2, 8, 0.);
-	matrix.show();
-	matrix.setValue(2, 4, 0.);
-	matrix.show();
-	matrix.swapRows(1, 0);
-	matrix.show();
-	matrix.setValue(0, 4, 0.);
-	matrix.show();
-	*/
-	
 	window.show();
+	
 	return app.exec();
 }

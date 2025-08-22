@@ -42,7 +42,8 @@ template <> constexpr inline auto QSparseMatrixWindow::qt_create_metaobjectdata<
         "QSparseMatrixWindow",
         "decompose",
         "",
-        "insert",
+        "downsize",
+        "insertOne",
         "setValue",
         "shuffle",
         "swapColumns",
@@ -53,18 +54,20 @@ template <> constexpr inline auto QSparseMatrixWindow::qt_create_metaobjectdata<
     QtMocHelpers::UintData qt_methods {
         // Slot 'decompose'
         QtMocHelpers::SlotData<void()>(1, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'insert'
+        // Slot 'downsize'
         QtMocHelpers::SlotData<void()>(3, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'setValue'
+        // Slot 'insertOne'
         QtMocHelpers::SlotData<void()>(4, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'shuffle'
+        // Slot 'setValue'
         QtMocHelpers::SlotData<void()>(5, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'swapColumns'
+        // Slot 'shuffle'
         QtMocHelpers::SlotData<void()>(6, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'swapRows'
+        // Slot 'swapColumns'
         QtMocHelpers::SlotData<void()>(7, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'transpose'
+        // Slot 'swapRows'
         QtMocHelpers::SlotData<void()>(8, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'transpose'
+        QtMocHelpers::SlotData<void()>(9, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -89,12 +92,13 @@ void QSparseMatrixWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, 
     if (_c == QMetaObject::InvokeMetaMethod) {
         switch (_id) {
         case 0: _t->decompose(); break;
-        case 1: _t->insert(); break;
-        case 2: _t->setValue(); break;
-        case 3: _t->shuffle(); break;
-        case 4: _t->swapColumns(); break;
-        case 5: _t->swapRows(); break;
-        case 6: _t->transpose(); break;
+        case 1: _t->downsize(); break;
+        case 2: _t->insertOne(); break;
+        case 3: _t->setValue(); break;
+        case 4: _t->shuffle(); break;
+        case 5: _t->swapColumns(); break;
+        case 6: _t->swapRows(); break;
+        case 7: _t->transpose(); break;
         default: ;
         }
     }
@@ -120,14 +124,14 @@ int QSparseMatrixWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 7)
+        if (_id < 8)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 7;
+        _id -= 8;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 7)
+        if (_id < 8)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 7;
+        _id -= 8;
     }
     return _id;
 }
