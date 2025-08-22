@@ -593,68 +593,61 @@ void HexSparseMatrix::swapColumns(qint32 column1, qint32 column2)
 	if (column1 > column2)
 		std::swap(column1, column2);
 	
-	auto startIndex = HexSparseMatrix::rowOffsets.cbegin();
 	auto stopIndex = HexSparseMatrix::rowOffsets.cbegin() + 1u;
 	
-	while (HexSparseMatrix::rowOffsets.cend() != stopIndex)
+	for (const auto& startIndex : HexSparseMatrix::rowOffsets) // We have to perform the swap row by row.
 	{
-		if (*stopIndex == *startIndex)
+		if (*stopIndex != startIndex)
 		{
-			++startIndex;
-			++stopIndex;
-			continue;
+			auto cit = HexSparseMatrix::pairs.cbegin() + startIndex;
+			
+			auto index1 = -1;
+			auto index2 = -1; 
+			
+			for (auto index = startIndex; index < *stopIndex; ++index)
+			{
+				if (cit->column == column1)
+					index1 = index;
+				
+				if (cit->column == column2)
+					index2 = index;
+				
+				++cit;
+			}
+			
+			if (index1 >= 0 and index2 >= 0) // Both fields were non-zeroes
+				std::swap(HexSparseMatrix::pairs[index1].value, HexSparseMatrix::pairs[index2].value);
+			else if (index1 >= 0) // One field was non-zero but the other was zero
+			{
+				const auto value = HexSparseMatrix::pairs[index1].value;
+					
+				while (index1 + 1 != *stopIndex and HexSparseMatrix::pairs[index1 + 1].column < column2)
+				{
+					HexSparseMatrix::pairs[index1] = HexSparseMatrix::pairs[index1 + 1];
+					++index1;
+				}
+				
+				HexSparseMatrix::pairs[index1] = HexColumnValuePair(value, column2);
+			}
+			else if (index2 >= 0) // One field was non-zero but the other was zero
+			{
+				const auto value = HexSparseMatrix::pairs[index2].value;
+				
+				while (index2 != startIndex and HexSparseMatrix::pairs[index2 - 1].column > column1)
+				{
+					HexSparseMatrix::pairs[index2] = HexSparseMatrix::pairs[index2 - 1];
+					--index2;
+				}
+				
+				HexSparseMatrix::pairs[index2] = HexColumnValuePair(value, column1);
+			}
+			// Else: both fields are zeroes so there's nothing to swap
 		}
 		
-		auto cit = HexSparseMatrix::pairs.cbegin() + (*startIndex);
-		
-		auto index1 = -1;
-		auto index2 = -1;
-		
-		auto bestSpot1 = -1;
-		auto bestSpot2 = -1;
-		
-		for (auto index = *startIndex; index < *stopIndex; ++index)
-		{
-			if (cit->column == column1)
-				index1 = index;
-			else if (bestSpot1 < 0 and cit->column > column1)
-				bestSpot1 = index;
-			
-			if (cit->column == column2)
-				index2 = index;
-			else if (bestSpot2 < 0 and cit->column > column2)
-				bestSpot2 = index;
-			
-			++cit;
-		}
-		
-		if (index1 >= 0 and index2 >= 0) // Both fields were non-zeroes
-			std::swap(HexSparseMatrix::pairs[index1].value, HexSparseMatrix::pairs[index2].value);
-		else if (index1 >= 0) // One field was non-zero but the other was zero
-		{
-			if (bestSpot2 < 0)
-				bestSpot2 = (*stopIndex) - 1;
-			
-			const auto value = HexSparseMatrix::pairs[index1].value;
-			
-			for (auto i = index1; i < bestSpot2; ++i)
-				HexSparseMatrix::pairs[i] = HexSparseMatrix::pairs[i + 1];
-			
-			HexSparseMatrix::pairs[bestSpot2] = HexColumnValuePair(value, column2);
-		}
-		else if (index2 >= 0) // One field was non-zero but the other was zero
-		{
-			const auto value = HexSparseMatrix::pairs[index2].value;
-			
-			for (auto i = index2; i > bestSpot1; --i)
-				HexSparseMatrix::pairs[i] = HexSparseMatrix::pairs[i - 1];
-			
-			HexSparseMatrix::pairs[bestSpot1] = HexColumnValuePair(value, column1);
-		}
-		// Else: both fields are zeroes so there's nothing to swap
-		
-		++startIndex;
 		++stopIndex;
+		
+		if (HexSparseMatrix::rowOffsets.cend() == stopIndex)
+			break;
 	}
 }
 
