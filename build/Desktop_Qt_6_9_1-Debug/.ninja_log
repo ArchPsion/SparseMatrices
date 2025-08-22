@@ -8,3 +8,12 @@
 3	263	1755827074654909360	foo_autogen/timestamp	8ef11155fc231233
 4	9	1755827074385214349	clean	b1ee4797a165d111
 1	4	1755827074381912671	CMakeFiles/clean.additional	7d54ee7770d40760
+2	5	1755828100096348300	CMakeFiles/clean.additional	7d54ee7770d40760
+5	9	1755828100099680326	clean	b1ee4797a165d111
+3	254	1755828100362347984	foo_autogen/timestamp	8ef11155fc231233
+3	254	1755828100362347984	foo_autogen/mocs_compilation.cpp	8ef11155fc231233
+3	254	1755828100362347984	/home/lol/Documents/Coding/C++/SparseMatrices/build/Desktop_Qt_6_9_1-Debug/foo_autogen/timestamp	8ef11155fc231233
+3	254	1755828100362347984	/home/lol/Documents/Coding/C++/SparseMatrices/build/Desktop_Qt_6_9_1-Debug/foo_autogen/mocs_compilation.cpp	8ef11155fc231233
+255	2913	1755828100367299997	CMakeFiles/foo.dir/Main.cpp.o	7a778020eb5a0794
+255	4162	1755828100366347980	CMakeFiles/foo.dir/foo_autogen/mocs_compilation.cpp.o	7042db008952531
+4162	4470	1755828104273343242	foo	b4011de99c5cbfcb

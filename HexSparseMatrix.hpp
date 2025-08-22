@@ -44,7 +44,7 @@ class HexSparseMatrix
 		qint32									numberOfColumns = 0;
 		
 		inline void								addValue(qint32, qint32, qreal);
-		inline qint32								indexOfFreeField(qint32, qint32) const;
+		inline qint32								indexOfFreeCell(qint32, qint32) const;
 		inline bool								insertColumnValuePair(qint32, qint32, qint32, qreal);
 		inline void								removeValue(qint32, qint32);
 		inline void								updateNumberOfColumns(void);
@@ -376,7 +376,7 @@ bool HexSparseMatrix::insertColumnValuePair(qint32 firstPossibleIndex, qint32 la
 	return false;
 }
 
-qint32 HexSparseMatrix::indexOfFreeField(qint32 row, qint32 column) const
+qint32 HexSparseMatrix::indexOfFreeCell(qint32 row, qint32 column) const
 {
 	const auto startIndex = HexSparseMatrix::rowOffsets[row];
 	const auto stopIndex = HexSparseMatrix::rowOffsets[row + 1];
@@ -403,29 +403,29 @@ qint32 HexSparseMatrix::indexOfFreeField(qint32 row, qint32 column) const
 
 bool HexSparseMatrix::insertOne(HexRandomGenerator& generator)
 {
-	const auto numberOfFields = HexSparseMatrix::numberOfRows*HexSparseMatrix::numberOfColumns;
+	const auto numberOfCells = HexSparseMatrix::numberOfRows*HexSparseMatrix::numberOfColumns;
 	const auto numberOfElements = static_cast<qint32>(HexSparseMatrix::pairs.size());
 	
-	if (numberOfElements >= numberOfFields)
+	if (numberOfElements >= numberOfCells)
 		return false;
 	
-	auto field = generator.getNumberWithinRange(numberOfFields);
-	auto column = field % HexSparseMatrix::numberOfColumns;
-	auto row = field/HexSparseMatrix::numberOfColumns;
+	auto cell = generator.getNumberWithinRange(numberOfCells);
+	auto column = cell % HexSparseMatrix::numberOfColumns;
+	auto row = cell/HexSparseMatrix::numberOfColumns;
 	
 	if (numberOfElements < 1)
 		HexSparseMatrix::pairs.emplace_back(1., column);
 	else // Very unoptimised for large, dense matrices, but then this project is all about sparse matrices...
 	{
-		auto index = HexSparseMatrix::indexOfFreeField(row, column);
+		auto index = HexSparseMatrix::indexOfFreeCell(row, column);
 		
 		while (index < 0)
 		{
-			field = generator.getNumberWithinRange(numberOfFields);
-			column = field % HexSparseMatrix::numberOfColumns;
-			row = field/HexSparseMatrix::numberOfColumns;
+			cell = generator.getNumberWithinRange(numberOfCells);
+			column = cell % HexSparseMatrix::numberOfColumns;
+			row = cell/HexSparseMatrix::numberOfColumns;
 			
-			index = HexSparseMatrix::indexOfFreeField(row, column);
+			index = HexSparseMatrix::indexOfFreeCell(row, column);
 		}
 		
 		const auto it = HexSparseMatrix::pairs.begin() + index;
@@ -615,9 +615,9 @@ void HexSparseMatrix::swapColumns(qint32 column1, qint32 column2)
 				++cit;
 			}
 			
-			if (index1 >= 0 and index2 >= 0) // Both fields were non-zeroes.
+			if (index1 >= 0 and index2 >= 0) // Both cells were non-zeroes.
 				std::swap(HexSparseMatrix::pairs[index1].value, HexSparseMatrix::pairs[index2].value);
-			else if (index1 >= 0) // One field was non-zero but the other was zero.
+			else if (index1 >= 0) // One cell was non-zero but the other was zero.
 			{
 				const auto value = HexSparseMatrix::pairs[index1].value;
 					
@@ -629,7 +629,7 @@ void HexSparseMatrix::swapColumns(qint32 column1, qint32 column2)
 				
 				HexSparseMatrix::pairs[index1] = HexColumnValuePair(value, column2);
 			}
-			else if (index2 >= 0) // One field was non-zero but the other was zero.
+			else if (index2 >= 0) // One cell was non-zero but the other was zero.
 			{
 				const auto value = HexSparseMatrix::pairs[index2].value;
 				
@@ -641,7 +641,7 @@ void HexSparseMatrix::swapColumns(qint32 column1, qint32 column2)
 				
 				HexSparseMatrix::pairs[index2] = HexColumnValuePair(value, column1);
 			}
-			// Else: both fields are zeroes so there's nothing to swap here.
+			// Else: both cells are zeroes so there's nothing to swap here.
 		}
 		
 		++stopIndex;
