@@ -26,7 +26,7 @@ class QSparseMatrixWindow : public QMainWindow
 	
 		static constexpr qint32		CharactersPerField = 7;
 		
-		inline static void		FillEntryWithMatrix(const HexSparseMatrix&, QTextEdit*, QString&&, qint32, bool);
+		inline static QString		CellString(bool);
 		inline static QString		NumberString(qreal);
 	
 		QWidget* const			mainWidget = new QWidget();
@@ -62,6 +62,8 @@ class QSparseMatrixWindow : public QMainWindow
 		HexSparseMatrix			matrix;
 		HexDecomposition		decomp;
 		
+		inline QString			getDataString(const HexSparseMatrix&) const;
+		inline QString			getMatrixString(const HexSparseMatrix&, bool) const;
 		inline void			updateEntries(void) const;
 	
 	private slots:
@@ -224,21 +226,32 @@ QSparseMatrixWindow::QSparseMatrixWindow(void) : QMainWindow()
 	QObject::connect(s5, SIGNAL(activated(void)), this, SLOT(transpose(void)));
 }
 
+QString QSparseMatrixWindow::CellString(bool zero)
+{
+	const auto theChar = (zero ? '0' : 'x');
+	const auto freeSpace = QSparseMatrixWindow::CharactersPerField - 1;
+	
+	return QString("&nbsp;").repeated(freeSpace/2) + theChar + QString("&nbsp;").repeated(freeSpace - freeSpace/2);
+}
+
 void QSparseMatrixWindow::decompose(void)
 {
 	QSparseMatrixWindow::decomp = QSparseMatrixWindow::matrix.getDecomposition();
 	
-	QSparseMatrixWindow::FillEntryWithMatrix(decomp.unitary, QSparseMatrixWindow::unitaryEdit, "unused orthonormal column(s)", QSparseMatrixWindow::matrix.getNumberOfRows(), true);
-	QSparseMatrixWindow::FillEntryWithMatrix(decomp.triangular, QSparseMatrixWindow::triangularEdit, "row(s) of zeroes", QSparseMatrixWindow::matrix.getNumberOfRows(), false);
+	const auto unitaryString = QSparseMatrixWindow::getMatrixString(QSparseMatrixWindow::decomp.unitary, false);
+	const auto triangularString = QSparseMatrixWindow::getMatrixString(QSparseMatrixWindow::decomp.triangular, true);
 	
-	const auto rank = decomp.unitary.getNumberOfColumns();
+	QSparseMatrixWindow::unitaryEdit->setHtml(unitaryString);
+	QSparseMatrixWindow::triangularEdit->setHtml(triangularString);
+	
+	const auto rank = decomp.unitary.getHighestColumn() + 1;
 	const auto rankString = "Rank " + QString::number(rank);
 	
-	const auto unitaryDimension = QString::number(QSparseMatrixWindow::decomp.unitary.getNumberOfRows()) + " × " + QString::number(QSparseMatrixWindow::decomp.unitary.getNumberOfRows());
-	const auto triangularDimension = QString::number(QSparseMatrixWindow::matrix.getNumberOfRows()) + " × " + QString::number(QSparseMatrixWindow::matrix.getNumberOfColumns());
+	const auto unitaryDimensionString = QSparseMatrixWindow::decomp.unitary.getDimensionString();
+	const auto triangularDimensionString = QSparseMatrixWindow::decomp.triangular.getDimensionString();
 	
-	const auto unitaryTitle = "Unitary Matrix Q (" + unitaryDimension + ')';
-	const auto triangularTitle = "Triangular Matrix R (" + triangularDimension + ')';
+	const auto unitaryTitle = "Unitary Matrix Q (" + unitaryDimensionString + ')';
+	const auto triangularTitle = "Triangular Matrix R (" + triangularDimensionString + ')';
 	
 	QSparseMatrixWindow::rankEdit->setText(rankString);
 	QSparseMatrixWindow::unitaryBox->setTitle(unitaryTitle);
@@ -251,36 +264,86 @@ void QSparseMatrixWindow::downsize(void)
 	QSparseMatrixWindow::updateEntries();
 }
 
-void QSparseMatrixWindow::FillEntryWithMatrix(const HexSparseMatrix& matrix, QTextEdit* edit, QString&& str, qint32 biggerNumber, bool column)
+QString QSparseMatrixWindow::getDataString(const HexSparseMatrix& matrix) const
 {
-	const auto numberOfColumns = matrix.getNumberOfColumns();
-	const auto numberOfRows = matrix.getNumberOfRows();
-	const auto denseMatrix = matrix.getDenseMatrix();
+	const auto& rowOffsets = matrix.getRowOffsets();
+	const auto& pairs = matrix.getPairs();
 	
-	const auto smallerNumber = (column ? numberOfColumns : numberOfRows);
-	const auto diff = biggerNumber - smallerNumber;
+	auto stopIndex = rowOffsets.cbegin() + 1u;
+	auto str = QString();
+	auto row = 0;
 	
-	auto matrixString = QString();
-	auto index = 0;
-	
-	for (auto cit = denseMatrix.cbegin(); denseMatrix.cend() != cit; ++cit)
+	for (const auto& startIndex : rowOffsets)
 	{
-		matrixString += QSparseMatrixWindow::NumberString(*cit);
-		matrixString += ((index + 1) % numberOfColumns != 0 ? " " : "<br>");
+		const auto beginning = "a(" + QString::number(row);
+		const auto end = pairs.cbegin() + (*stopIndex);
 		
-		if (index + 1 == numberOfColumns and diff != 0 and column)
-		{
-			matrixString.chop(4u);
-			matrixString += " ...and " + QString::number(diff) + " more " + str + "<br>";
-		}
+		for (auto it = pairs.cbegin() + startIndex; it != end; ++it)
+			str += beginning  + ", " + QString::number(it->column) + ") = " + QString::number(it->value) + '\n';
 		
-		++index;
+		++row;
+		++stopIndex;
+		
+		if (rowOffsets.cend() == stopIndex)
+			break;
 	}
 	
-	if (diff != 0 and not column)
-		matrixString += "\n ...and " + QString::number(diff) + " more " + str;
+	return str;
+}
+
+QString QSparseMatrixWindow::getMatrixString(const HexSparseMatrix& matrix, bool showAllZeroes) const
+{
+	const auto& rowOffsets = matrix.getRowOffsets();
+	const auto& pairs = matrix.getPairs();
 	
-	edit->setHtml(matrixString);
+	const auto numberOfColumns = matrix.getNumberOfColumns();
+	const auto highestColumn = matrix.getHighestColumn();
+	
+	const auto zeroString = QSparseMatrixWindow::CellString(true) + ' ';
+	const auto xString = QSparseMatrixWindow::CellString(showAllZeroes) + ' ';
+	
+	auto stopIndex = rowOffsets.cbegin() + 1u;
+	auto str = QString();
+	
+	for (const auto& startIndex : rowOffsets)
+	{
+		const auto end = pairs.cbegin() + (*stopIndex);
+		auto currentColumn = 0;
+		
+		for (auto it = pairs.cbegin() + startIndex; it != end; ++it)
+		{
+			while (currentColumn < it->column)
+			{
+				str += QSparseMatrixWindow::NumberString(0.) + ' ';
+				++currentColumn;
+			}
+			
+			str += QSparseMatrixWindow::NumberString(it->value) + ' ';
+			++currentColumn;
+		}
+		
+		while (currentColumn <= highestColumn)
+		{
+			str += zeroString;
+			++currentColumn;
+		}
+		
+		while (currentColumn < numberOfColumns)
+		{
+			str += xString;
+			++currentColumn;
+		}
+		
+		str.chop(1u);
+		str += "<br>";
+	
+		++stopIndex;
+		
+		if (rowOffsets.cend() == stopIndex)
+			break;
+	}
+	
+	return str;
 }
 
 void QSparseMatrixWindow::insertOne(void)
@@ -381,26 +444,8 @@ void QSparseMatrixWindow::transpose(void)
 
 void QSparseMatrixWindow::updateEntries(void) const
 {
-	const auto denseMatrix = QSparseMatrixWindow::matrix.getDenseMatrix();
-	const auto numberOfRows = QSparseMatrixWindow::matrix.getNumberOfRows();
-	const auto numberOfColumns = QSparseMatrixWindow::matrix.getNumberOfColumns();
-	
-	auto matrixString = QString();
-	auto dataString = QString();
-	auto index = 0;
-	
-	for (auto cit = denseMatrix.cbegin(); denseMatrix.cend() != cit; ++cit)
-	{
-		matrixString += QSparseMatrixWindow::NumberString(*cit);
-		matrixString += ((index + 1) % numberOfColumns != 0 ? " " : "<br>");
-		
-		if (*cit != 0.)
-			dataString += "a(" + QString::number(index/numberOfColumns) + ", " + QString::number(index % numberOfColumns) + ") = " + QString::number(*cit) + '\n';
-		
-		++index;
-	}
-	
-	dataString.chop(1u);
+	const auto dataString = QSparseMatrixWindow::getDataString(QSparseMatrixWindow::matrix);
+	const auto matrixString = QSparseMatrixWindow::getMatrixString(QSparseMatrixWindow::matrix, true);
 	
 	QSparseMatrixWindow::dataEdit->setText(dataString);
 	QSparseMatrixWindow::matrixEdit->setHtml(matrixString);
@@ -443,7 +488,7 @@ void QSparseMatrixWindow::updateEntries(void) const
 	}
 	else
 	{
-		const auto matrixTitle = "Sparse Matrix A (" + QString::number(numberOfRows) + " × " + QString::number(numberOfColumns) + ')';
+		const auto matrixTitle = "Sparse Matrix A (" + QSparseMatrixWindow::matrix.getDimensionString() + ')';
 		const auto dataTitle = "Non-Zero Values (" + QString::number(pairs.size()) + ')';
 		
 		QSparseMatrixWindow::matrixBox->setTitle(matrixTitle);

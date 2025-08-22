@@ -57,10 +57,11 @@ class HexSparseMatrix
 		inline									HexSparseMatrix(const std::vector<std::vector<HexColumnValuePair>>&, qint32);
 	
 		inline void								downsize(void);
-		inline QString								getData(void) const;
 		inline HexDecomposition							getDecomposition(void) const;
 		inline std::vector<qreal>						getDenseMatrix(void) const;
 		inline qreal								getDensity(void) const;
+		inline QString								getDimensionString(void) const;
+		inline qint32								getHighestColumn(void) const;
 		inline qint32								getNumberOfColumns(void) const;
 		inline qint32								getNumberOfRows(void) const;
 		inline const std::vector<HexColumnValuePair>&				getPairs(void) const;
@@ -280,6 +281,9 @@ HexDecomposition HexSparseMatrix::getDecomposition(void) const
 			break;
 	}
 	
+	while (rowBase.size() < static_cast<quint32>(HexSparseMatrix::numberOfRows))
+		rowBase.emplace_back();
+	
 	decomp.unitary = HexSparseMatrix(rowBase, HexSparseMatrix::numberOfRows).transposed();
 	decomp.triangular = HexSparseMatrix(coeffs, HexSparseMatrix::numberOfRows).transposed();
 	
@@ -332,6 +336,27 @@ std::vector<qreal> HexSparseMatrix::getDenseMatrix(void) const
 qreal HexSparseMatrix::getDensity(void) const
 {
 	return static_cast<qreal>(HexSparseMatrix::pairs.size())/static_cast<qreal>(HexSparseMatrix::numberOfColumns*HexSparseMatrix::numberOfRows);
+}
+
+QString HexSparseMatrix::getDimensionString(void) const
+{
+	return QString::number(HexSparseMatrix::numberOfRows) + " × " + QString::number(HexSparseMatrix::numberOfColumns);
+}
+
+qint32 HexSparseMatrix::getHighestColumn(void) const
+{
+	auto maxColumn = 0;
+	
+	for (const auto& pr : pairs)
+	{
+		if (pr.column + 1 == HexSparseMatrix::numberOfColumns)
+			return pr.column;
+		
+		if (pr.column > maxColumn)
+			maxColumn = pr.column;
+	}
+	
+	return maxColumn;
 }
 
 qint32 HexSparseMatrix::getNumberOfColumns(void) const
@@ -777,18 +802,8 @@ HexSparseMatrix HexSparseMatrix::transposed(void) const
 
 void HexSparseMatrix::updateNumberOfColumns(void)
 {
-	auto newNumberOfColumns = 0;
-	
-	for (const auto& pr : HexSparseMatrix::pairs)
-	{
-		if (pr.column + 1 == HexSparseMatrix::numberOfColumns)
-			return;
-		
-		if (newNumberOfColumns <= pr.column)
-			newNumberOfColumns = pr.column + 1;
-	}
-	
-	HexSparseMatrix::numberOfColumns = newNumberOfColumns;
+	const auto highestColumn = HexSparseMatrix::getHighestColumn();
+	HexSparseMatrix::numberOfColumns = highestColumn + 1;
 }
 
 void HexSparseMatrix::updateNumberOfRows(void)
