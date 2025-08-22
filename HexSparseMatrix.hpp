@@ -35,6 +35,7 @@ class HexSparseMatrix
 	
 		template<typename Type> inline static void				Change(std::vector<HexColumnValuePair>&, Type, Type, qreal);
 		inline static qreal							Normalise(std::vector<HexColumnValuePair>&);
+		template<typename Type1, typename Type2> inline static void		Rewrite(Type1&, Type2, Type2);
 		template<typename Type1, typename Type2> inline static qreal		Scalar(Type1, Type1, Type2, Type2);
 	
 		std::vector<HexColumnValuePair>						pairs;
@@ -487,6 +488,20 @@ void HexSparseMatrix::removeValue(qint32 row, qint32 column)
 	for (auto r = row + 1; r <= HexSparseMatrix::numberOfRows; ++r)
 		--HexSparseMatrix::rowOffsets[r];
 }
+#include <iostream>
+template<typename Type1, typename Type2>
+void HexSparseMatrix::Rewrite(Type1& it, Type2 beg, Type2 end)
+{
+	std::cout << 'a' << std::endl;
+	auto index = 0;
+	for (auto itt = beg; itt != end; ++itt)
+	{
+		*it = *itt;
+		++it;
+		std::cout << index++ << std::endl;
+	}
+	std::cout << 'b' << std::endl;
+}
 
 template<typename Type1, typename Type2>
 qreal HexSparseMatrix::Scalar(Type1 beg1, Type1 end1, Type2 beg2, Type2 end2)
@@ -668,33 +683,47 @@ void HexSparseMatrix::swapRows(qint32 row1, qint32 row2)
 	if (row1 > row2)
 		std::swap(row1, row2);
 	
-	std::vector<HexColumnValuePair> newPairs;
-	newPairs.reserve(HexSparseMatrix::pairs.size());
-	
 	const auto numberOfElementsInRow1 = HexSparseMatrix::rowOffsets[row1 + 1] - HexSparseMatrix::rowOffsets[row1];
 	const auto numberOfElementsInRow2 = HexSparseMatrix::rowOffsets[row2 + 1] - HexSparseMatrix::rowOffsets[row2];
 	
 	if (numberOfElementsInRow1 < 1 and numberOfElementsInRow2 < 1)
 		return;
 	
-	const auto beg1 = HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row1];
-	const auto end1 = HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row1 + 1];
-	
-	const auto beg2 = HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row2];
-	const auto end2 = HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row2 + 1];
-	
-	newPairs.insert(newPairs.end(), HexSparseMatrix::pairs.cbegin(), beg1);
-	newPairs.insert(newPairs.end(), beg2, end2);
-	newPairs.insert(newPairs.end(), end1, beg2);
-	newPairs.insert(newPairs.end(), beg1, end1);
-	newPairs.insert(newPairs.end(), end2, HexSparseMatrix::pairs.cend());
+	if (numberOfElementsInRow2 <= numberOfElementsInRow1)
+	{
+		const auto beg1 = HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row1];
+		const auto end1 = HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row1 + 1];
+		
+		const auto beg2 = HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row2];
+		const auto end2 = HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row2 + 1];
+		
+		const auto values1 = std::vector<HexColumnValuePair>(beg1, end1);
+		auto it = HexSparseMatrix::pairs.begin() + HexSparseMatrix::rowOffsets[row1];
+		
+		HexSparseMatrix::Rewrite(it, beg2, end2);
+		HexSparseMatrix::Rewrite(it, end1, beg2);
+		HexSparseMatrix::Rewrite(it, values1.cbegin(), values1.cend());
+	}
+	else
+	{
+		const auto beg1 = std::make_reverse_iterator(HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row1 + 1]);
+		const auto end1 = std::make_reverse_iterator(HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row1]);
+		
+		const auto beg2 = std::make_reverse_iterator(HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row2 + 1]);
+		const auto end2 = std::make_reverse_iterator(HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row2]);
+		
+		const auto values2 = std::vector<HexColumnValuePair>(beg2, end2);
+		auto it = std::make_reverse_iterator(HexSparseMatrix::pairs.begin() + HexSparseMatrix::rowOffsets[row2 + 1]);
+		
+		HexSparseMatrix::Rewrite(it, beg1, end1);
+		HexSparseMatrix::Rewrite(it, end2, beg1);
+		HexSparseMatrix::Rewrite(it, values2.cbegin(), values2.cend());
+	}
 	
 	const auto differenceOfElements = numberOfElementsInRow2 - numberOfElementsInRow1;
 	
 	for (auto row = row1 + 1; row <= row2; ++row) // There is no difference beyond row2 as the sum of past elements is unchanged.
 		HexSparseMatrix::rowOffsets[row] += differenceOfElements;
-	
-	HexSparseMatrix::pairs.swap(newPairs);
 }
 
 void HexSparseMatrix::transpose(void)

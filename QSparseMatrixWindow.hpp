@@ -359,9 +359,6 @@ void QSparseMatrixWindow::swapColumns(void)
 	
 	QSparseMatrixWindow::matrix.swapColumns(column1, column2);
 	QSparseMatrixWindow::updateEntries();
-	
-	QSparseMatrixWindow::swapEdit1->clear();
-	QSparseMatrixWindow::swapEdit2->clear();
 }
 
 void QSparseMatrixWindow::swapRows(void)
@@ -374,9 +371,6 @@ void QSparseMatrixWindow::swapRows(void)
 	
 	QSparseMatrixWindow::matrix.swapRows(row1, row2);
 	QSparseMatrixWindow::updateEntries();
-	
-	QSparseMatrixWindow::swapEdit1->clear();
-	QSparseMatrixWindow::swapEdit2->clear();
 }
 
 void QSparseMatrixWindow::transpose(void)
