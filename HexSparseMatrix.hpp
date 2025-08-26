@@ -710,7 +710,7 @@ void HexSparseMatrix::swapRows(qint32 row1, qint32 row2)
 	if (numberOfElementsInRow1 < 1 and numberOfElementsInRow2 < 1)
 		return;
 	
-	if (numberOfElementsInRow2 <= numberOfElementsInRow1)
+	if (numberOfElementsInRow2 < numberOfElementsInRow1)
 	{
 		const auto beg1 = HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row1];
 		const auto end1 = HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row1 + 1];
@@ -725,7 +725,7 @@ void HexSparseMatrix::swapRows(qint32 row1, qint32 row2)
 		HexSparseMatrix::Rewrite(it, end1, beg2);
 		HexSparseMatrix::Rewrite(it, values1.cbegin(), values1.cend());
 	}
-	else
+	else if (numberOfElementsInRow2 > numberOfElementsInRow1)
 	{
 		const auto beg1 = std::make_reverse_iterator(HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row1 + 1]);
 		const auto end1 = std::make_reverse_iterator(HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row1]);
@@ -739,6 +739,21 @@ void HexSparseMatrix::swapRows(qint32 row1, qint32 row2)
 		HexSparseMatrix::Rewrite(it, beg1, end1);
 		HexSparseMatrix::Rewrite(it, end2, beg1);
 		HexSparseMatrix::Rewrite(it, values2.cbegin(), values2.cend());
+	}
+	else
+	{
+		const auto beg1 = HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row1];
+		const auto end1 = HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row1 + 1];
+		
+		const auto beg2 = HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row2];
+		const auto end2 = HexSparseMatrix::pairs.cbegin() + HexSparseMatrix::rowOffsets[row2 + 1];
+		
+		const auto values1 = std::vector<HexColumnValuePair>(beg1, end1);
+		auto it1 = HexSparseMatrix::pairs.begin() + HexSparseMatrix::rowOffsets[row1];
+		auto it2 = HexSparseMatrix::pairs.begin() + HexSparseMatrix::rowOffsets[row2];
+		
+		HexSparseMatrix::Rewrite(it1, beg2, end2);
+		HexSparseMatrix::Rewrite(it2, values1.cbegin(), values1.cend());
 	}
 	
 	const auto differenceOfElements = numberOfElementsInRow2 - numberOfElementsInRow1;
